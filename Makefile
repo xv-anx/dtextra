@@ -1,4 +1,4 @@
-APP_NAME=main.exe
+APP_NAME=main
 
 build:
 	go build -o $(APP_NAME)
