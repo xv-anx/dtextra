@@ -1,6 +1,6 @@
 # Data Extraction
 
-<img src"https://user-images.githubusercontent.com/128390652/227145272-f13ab318-eb12-44b1-95f5-404fbe921e1f.png" width="100%"
+![Image](img src"https://user-images.githubusercontent.com/128390652/227145272-f13ab318-eb12-44b1-95f5-404fbe921e1f.png)
 
 ## 使い方
 
