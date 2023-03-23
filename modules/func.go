@@ -41,7 +41,9 @@ func (c *CheatData) PrintCheatData() {
 	border := "-------------------------------------------------------------------"
 	space := "    "
 	color.White("void"+space+"%s(MenuEntry* entry)\n{", c.Name)
-	color.Green(space+"// %s\n", c.Note)
+	if c.Note != "" {
+		color.Green(space+"// %s\n", c.Note)
+	}
 	if c.StartAddr != "" && len(c.Values) != 0 {
 		color.White(space+"u32 offset = %s;\n", c.StartAddr)
 		color.White(space+"const std::vector<u32> data =\n"+space+"{\n"+space+space+"%s"+space+"\n", strings.Join(dataGroupe(c.Values, 4), ", \n"+space+space+"")+"\n"+space+"};")
