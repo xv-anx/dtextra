@@ -1,139 +1,120 @@
 package main
 
 import (
+	"bufio"
 	"dtextra/modules"
+	"fmt"
+	"os"
 	"strings"
-
-	"github.com/fatih/color"
 )
 
+var judge bool
+var cheat *modules.CheatData
+
 func main() {
-	code := `
-00DCDCD4 E92D4006
-00DCDCD8 E2800FA4
-00DCDCDC E1A02000
-00DCDCE0 E3A01006
-00DCDCE4 E5D00003
-00DCDCE8 E1A00001
-00DCDCEC E1A06000
-00DCDCF0 E5C26003
-00DCDCF4 E8BD8006
-!%
-00B54048 E1C109B6
-00B540EC EB09E6F8
-00B79EAC EB094F88
-%!`
+	cheats := modules.NewCheats()
 
-	// 文字列のコードを改行して分割した結果をスライス型で返す
-	codeArrays := strings.Split(code, "\n") /*
-		[ 00DCDCD4 E92D4006 00DCDCD8 E2800FA4 00DCDCDC E1A02000 00DCDCE0 E3A01006 00DCDCE4 E5D00003 00DCDCE8 E1A00001 00DCDCEC E1A06000 00DCDCF0 E5C26003 00DCDCF4 E8BD8006 !%
-		00B54048 E1C109B6 00B540EC EB09E6F8 00B79EAC EB094F88 %!] */
-
-	var romAddress []string
-	var romData []string
-	var judge bool
-
-	var startAddress string
-	var values []string
-
-	// スライス型のコードをrangeで値を順番に取り出す、ループ回数は持たない
-	for _, codeArray := range codeArrays {
-		/*  00DCDCD4 E92D4006
-		00DCDCD8 E2800FA4
-		00DCDCDC E1A02000
-		00DCDCE0 E3A01006
-		00DCDCE4 E5D00003
-		00DCDCE8 E1A00001
-		00DCDCEC E1A06000
-		00DCDCF0 E5C26003
-		00DCDCF4 E8BD8006
-		!%
-		00B54048 E1C109B6
-		00B540EC EB09E6F8
-		00B79EAC EB094F88
-		%! */
-
-		// 取り出したスライスの値に "!%" がある場合は、%!まで処理をする
-		if codeArray == "!%" {
-			judge = true
-			continue
-		}
-		//　%! までの処理
-		if judge && codeArray != "%!" {
-			// スペースで分割された各部分を抽出し、アドレスとデータを取得
-			code := strings.Fields(codeArray)
-			/* [00B54048 E1C109B6][00B540EC EB09E6F8][00B79EAC EB094F88]
-
-			アドレス		データ
-			romDatas[0]  romDatas[1] */
-
-			// 各行が2つの部分に分割される場合のみ、アドレスとデータを抽出する
-			if len(code) == 2 {
-				// [00B54048 E1C109B6] アドレスとデータ
-
-				// アドレスの接頭辞を0xに置換
-				address := "0x" + code[0]
-				// 0x00B540480x00B540EC0x00B79EAC
-
-				// データの接頭辞を0xに置換
-				data := "0x" + code[1]
-				// 0xE1C109B60xEB09E6F80xEB094F88
-
-				// それぞれアドレスとデータに置換した要素を追加、このとき末尾に追加される
-				romAddress = append(romAddress, address)
-				// 0x00B540480x00B540EC0x00B79EAC
-
-				romData = append(romData, data)
-				// E1C109B60xEB09E6F80xEB094F88
-			}
-			// 判定なしの場合、!% が見つからない場合
-		} else if !judge {
-			code := strings.Fields(codeArray)
-			if len(code) == 2 {
-
-				// 最初の要素から0xを削除
-				address := strings.TrimPrefix(code[0], "0x")
-
-				// アドレス桁数が8未満の場合
-				if len(address) < 8 {
-
-					// アドレス先頭に0を追加
-					address = "0" + address
-					// 00DCDCD4
-				}
-
-				// 開始アドレスに何もない場合
-				if startAddress == "" {
-
-					// 開始アドレス先頭に0xを追加
-					startAddress = "0x" + address
-					// 0x00DCDCD4
-				}
-				// 値の接頭辞を0xに置換
-				value := "0x" + code[1]
-				// 値に置換した要素を追加
-				values = append(values, "0x"+value)
-			}
-
-		}
-		// %!が見つかった場合は
-		if codeArray == "%!" {
-			// 判定なし
-			judge = false
+	dir := "./cheats"
+	if _, err := os.Stat(dir); os.IsNotExist(err) {
+		err := os.Mkdir(dir, 0755)
+		if err != nil {
+			fmt.Println(err)
+			return
 		}
 	}
-	c1 := color.New(color.FgRed)
-	c1.Add(color.Bold)
 
-	c2 := color.New(color.FgGreen)
-	c2.Add(color.Bold)
+	filePath := "./cheats/code.txt"
+	if _, err := os.Stat(filePath); os.IsNotExist(err) {
+		file, err := os.Create(filePath)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		defer file.Close()
+	} else {
+		file, err := os.Open(filePath)
+		if err != nil {
+			fmt.Println(err)
+			return
+		}
+		defer file.Close()
 
-	c3 := color.New(color.FgYellow)
-	c3.Add(color.Bold)
+		sc := bufio.NewScanner(file)
+		for sc.Scan() {
+			lines := sc.Text()
+			if lines == "" {
+				continue
+			}
+			line := strings.Split(lines, "\n")
 
-	c1.Printf("Offset: %s\n\n", startAddress)
-	c2.Printf("Values: \n%s\n\n", strings.Join(modules.DataGroupe(values, 4), ", \n"))
-	for i := range romAddress {
-		c3.Printf("Process::Write32(%s, %s);\n", romAddress[i], romData[i])
+			for _, l := range line {
+				if strings.HasPrefix(l, "[") && strings.HasSuffix(l, "]") {
+					name := strings.TrimPrefix(strings.TrimSuffix(l, "]"), "[")
+					cheat = cheats.AddCheatData(name)
+					continue
+				}
+
+				if l == "!%" {
+					judge = true
+					continue
+				}
+				if judge && l != "%!" {
+					parts := strings.Fields(l)
+					if len(parts) == 2 {
+						address := "0x" + strings.TrimPrefix(parts[0], "0")
+						data := "0x" + strings.ReplaceAll(parts[1], ",", "")
+						if cheat == nil {
+							fmt.Errorf("Cheat data not found")
+						}
+						cheats.AddReadonlyData(address, data)
+					}
+
+					if judge && strings.HasPrefix(l, "!{") {
+						note := strings.TrimPrefix(strings.TrimSuffix(l, "}"), "!{")
+						if cheat != nil {
+							cheat.Note = note // Noteを設定する
+						}
+					}
+
+				} else if !judge && l != "!%" {
+					parts := strings.Fields(l)
+					if len(parts) == 2 {
+						address := strings.TrimPrefix(parts[0], "0x")
+						if len(address) < 8 {
+							address = "0" + address
+						}
+						if cheat == nil {
+							fmt.Errorf("Cheat data not found")
+						}
+						if cheat.StartAddr == "" {
+							cheat.StartAddr = "0x" + address
+						}
+						dataParts := strings.Fields(parts[1])
+						var data string
+						if len(dataParts) == 1 {
+							data = "0x" + dataParts[0]
+						} else if len(dataParts) >= 2 {
+							data = "0x" + dataParts[1]
+						}
+						cheat.Values = append(cheat.Values, data)
+					}
+
+				} else if l == "%!" {
+					judge = false
+					continue
+				}
+				if cheat == nil {
+					fmt.Errorf("invalid file format: Cheats not found")
+				}
+			}
+		}
+
+		if err := sc.Err(); err != nil {
+			fmt.Errorf("error while reading file: %w", err)
+		}
+
+		for _, cheat := range cheats.Data {
+			cheat.PrintCheatData()
+		}
 	}
 }
