@@ -5,7 +5,7 @@
 ## 使い方
 
 1. cheatsフォルダを作成し、cheatsフォルダにcode.txtファイルを作成します。
-    またはbuild.batを実行すると作成されます。  
+    またはbuild.batを起動すると作成されます。  
 ```
 $ go run main.go
 ```
