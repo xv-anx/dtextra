@@ -2,7 +2,7 @@ package main
 
 import (
 	"bufio"
-	"dtextra/modules"
+	"github.com/xv-anx/dtextra/modules"
 	"fmt"
 	"os"
 	"strings"

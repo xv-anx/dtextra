@@ -1,4 +1,4 @@
-module dtextra
+module github.com/xv-anx/dtextra
 
 go 1.20
 
