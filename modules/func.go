@@ -38,18 +38,20 @@ func (c *Cheats) AddReadonlyData(addr, val string) {
 }
 
 func (c *CheatData) PrintCheatData() {
-	border := "--------------------------------------------"
-	color.White("Cheat Name: %s\n", c.Name)
-	if c.Note != "" {
-		color.White("Note: %s\n\n", c.Note)
-	}
+	border := "-------------------------------------------------------------------"
+	space := "    "
+	color.White("void"+space+"%s(MenuEntry* entry)\n{", c.Name)
+	color.Green(space+"// %s\n", c.Note)
 	if c.StartAddr != "" && len(c.Values) != 0 {
-		color.Red("Offset: %s\n", c.StartAddr)
-		color.Green("Values: \n%s\n\n", strings.Join(dataGroupe(c.Values, 4), ", \n"))
+		color.White(space+"u32 offset = %s;\n", c.StartAddr)
+		color.White(space+"const std::vector<u32> data =\n"+space+"{\n"+space+space+"%s"+space+"\n", strings.Join(dataGroupe(c.Values, 4), ", \n"+space+space+"")+"\n"+space+"};")
+		color.HiMagenta(space+"memcpy(reinterpret_cast<void*>(offset), &data[0], data.size() * sizeof(u32));\n")
 	}
+	
 	for i := range c.ReadOnlyAddr {
-		color.HiYellow("Process::Write32(%s, %s);\n", c.ReadOnlyAddr[i], c.ReadOnlyVal[i])
+		color.HiYellow(space+"Process::Write32(%s, %s);\n", c.ReadOnlyAddr[i], c.ReadOnlyVal[i])
 	}
+	color.White("}")
 	color.Blue(border)
 }
 

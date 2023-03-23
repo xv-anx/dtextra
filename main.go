@@ -2,10 +2,11 @@ package main
 
 import (
 	"bufio"
-	"github.com/xv-anx/dtextra/modules"
 	"fmt"
+	"github.com/xv-anx/dtextra/modules"
 	"os"
 	"strings"
+	"unicode"
 )
 
 var judge bool
@@ -49,8 +50,25 @@ func main() {
 
 			for _, l := range line {
 				if strings.HasPrefix(l, "[") && strings.HasSuffix(l, "]") {
-					name := strings.TrimPrefix(strings.TrimSuffix(l, "]"), "[")
-					cheat = cheats.AddCheatData(name)
+					funcName := strings.TrimPrefix(strings.TrimSuffix(l, "]"), "[")
+					funcName = strings.Map(func(r rune) rune {
+						if unicode.IsSpace(r) || unicode.IsPunct(r) {
+							return '_'
+						}
+						return r
+					}, funcName)
+					words := strings.Split(funcName, "_")
+					for i, word := range words {
+						if len(word) > 0 {
+							if i == 0 {
+								words[i] = strings.ToLower(word)
+							} else {
+								words[i] = strings.Title(strings.ToLower(word))
+							}
+						}
+					}
+					funcName = strings.Join(words, "")
+					cheat = cheats.AddCheatData(funcName)
 					continue
 				}
 
@@ -69,10 +87,10 @@ func main() {
 						cheats.AddReadonlyData(address, data)
 					}
 
-					if judge && strings.HasPrefix(l, "!{") {
-						note := strings.TrimPrefix(strings.TrimSuffix(l, "}"), "!{")
+					if judge && strings.HasPrefix(l, "{") {
+						note := strings.TrimPrefix(strings.TrimSuffix(l, "}"), "{")
 						if cheat != nil {
-							cheat.Note = note // Noteを設定する
+							cheat.Note = note
 						}
 					}
 
