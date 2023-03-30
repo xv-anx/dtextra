@@ -46,10 +46,10 @@ func (c *CheatData) PrintCheatData() {
 	}
 	if c.StartAddr != "" && len(c.Values) != 0 {
 		color.White(space+"u32 offset = %s;\n", c.StartAddr)
-		color.White(space+"const std::vector<u32> data =\n"+space+"{\n"+space+space+"%s"+space+"\n", strings.Join(dataGroupe(c.Values, 4), ", \n"+space+space+"")+"\n"+space+"};")
-		color.HiMagenta(space+"memcpy(reinterpret_cast<void*>(offset), &data[0], data.size() * sizeof(u32));\n")
+		color.White(space+"u32 const data[] =\n"+space+"{\n"+space+space+"%s"+space+"\n", strings.Join(dataGroupe(c.Values, 4), ", \n"+space+space+"")+"\n"+space+"};")
+		color.HiMagenta(space + "memcpy((void*)offset, data, sizeof(data));\n")
 	}
-	
+
 	for i := range c.ReadOnlyAddr {
 		color.HiYellow(space+"Process::Write32(%s, %s);\n", c.ReadOnlyAddr[i], c.ReadOnlyVal[i])
 	}

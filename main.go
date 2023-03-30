@@ -3,10 +3,13 @@ package main
 import (
 	"bufio"
 	"fmt"
-	"github.com/xv-anx/dtextra/modules"
 	"os"
 	"strings"
 	"unicode"
+
+	"github.com/xv-anx/dtextra/modules"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 var judge bool
@@ -19,7 +22,7 @@ func main() {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		err := os.Mkdir(dir, 0755)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			return
 		}
 	}
@@ -28,14 +31,14 @@ func main() {
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
 		file, err := os.Create(filePath)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			return
 		}
 		defer file.Close()
 	} else {
 		file, err := os.Open(filePath)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Fprintln(os.Stderr, err)
 			return
 		}
 		defer file.Close()
@@ -63,7 +66,7 @@ func main() {
 							if i == 0 {
 								words[i] = strings.ToLower(word)
 							} else {
-								words[i] = strings.Title(strings.ToLower(word))
+								words[i] = cases.Title(language.Und).String(word)
 							}
 						}
 					}
@@ -82,7 +85,8 @@ func main() {
 						address := "0x" + strings.TrimPrefix(parts[0], "0")
 						data := "0x" + strings.ReplaceAll(parts[1], ",", "")
 						if cheat == nil {
-							fmt.Errorf("Cheat data not found")
+							fmt.Fprintln(os.Stderr, "Cheat data not found")
+							return
 						}
 						cheats.AddReadonlyData(address, data)
 					}
@@ -102,7 +106,8 @@ func main() {
 							address = "0" + address
 						}
 						if cheat == nil {
-							fmt.Errorf("Cheat data not found")
+							fmt.Fprintln(os.Stderr, "Cheat data not found")
+							return
 						}
 						if cheat.StartAddr == "" {
 							cheat.StartAddr = "0x" + address
@@ -122,13 +127,15 @@ func main() {
 					continue
 				}
 				if cheat == nil {
-					fmt.Errorf("invalid file format: Cheats not found")
+					fmt.Fprintln(os.Stderr, "invalid file format: Cheats not found")
+					return
 				}
 			}
 		}
 
 		if err := sc.Err(); err != nil {
-			fmt.Errorf("error while reading file: %w", err)
+			fmt.Fprintln(os.Stderr, "error while reading file: ", err)
+			return
 		}
 
 		for _, cheat := range cheats.Data {
